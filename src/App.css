@@ -15,6 +15,7 @@ body, html, #root {
 .editor-container {
   position: relative;
   flex: 1;
+  min-height: 300px;
 }
 
 .topbar {
@@ -24,50 +25,32 @@ body, html, #root {
   display: flex;
   justify-content: flex-start;
   align-items: center;
+  background-color: #282c34;
 }
 
 .run-btn {
-  background: #16a34a;
+  background-color: #7216f4;
   color: white;
   border: none;
   padding: 6px 12px;
   font-weight: bold;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 14px;
 }
 
-.terminal-container {
+.terminal-textarea {
+  width: 100%;
+  height: 200px;
   background-color: #1e1e1e;
   color: #d4d4d4;
   font-family: monospace;
-  padding: 10px;
-  height: 200px;
-  overflow-y: auto;
-  border-top: 2px solid #333;
-}
-
-.terminal-line {
-  white-space: pre-wrap;
-}
-
-.terminal-input-line {
-  display: flex;
-  align-items: center;
-  margin-top: 4px;
-}
-
-.terminal-prompt {
-  color: #0f0;
-  margin-right: 5px;
-}
-
-.terminal-input {
-  flex: 1;
-  background: transparent;
+  font-size: 14px;
   border: none;
-  color: #fff;
-  font-family: monospace;
-  font-size: 1em;
   outline: none;
+  resize: none;
+  padding: 10px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  border-top: 2px solid #333;
 }

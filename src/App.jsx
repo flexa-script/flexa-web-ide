@@ -3,24 +3,31 @@ import Editor from '@monaco-editor/react';
 import './App.css';
 
 function App() {
-  const [code, setCode] = useState('// Código Flexa aqui\nprintln("Hello!");\nvar name = read("What\'s your name? ");\nprintln("Hello, " + name + \'!\');\n');
-  const [terminalLines, setTerminalLines] = useState([]);
-  const [currentInput, setCurrentInput] = useState('');
+  const [code, setCode] = useState(`// Visit https://flexa-script.github.io/ for docs
+
+println("Hello!");
+var name = read("What\'s your name? ");
+println("Hello, " + name + \'!\');
+`);
+  const [consoleText, setConsoleText] = useState('');
+  const [inputStart, setInputStart] = useState(0);
+  const [allowInput, setAllowInput] = useState(false);
   const socketRef = useRef(null);
-  const terminalRef = useRef(null);
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     const socket = new WebSocket('ws://localhost:3002');
     socketRef.current = socket;
 
-    socket.onopen = () => console.log('WebSocket conectado');
+    socket.onopen = () => console.log('WebSocket connected');
 
     socket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'output' || msg.type === 'error') {
-        appendToTerminal(msg.data);
+        appendToConsole(msg.data);
       } else if (msg.type === 'exit') {
-        appendToTerminal(`\n[Processo encerrado com código ${msg.code}]\n`);
+        setAllowInput(false);
+        appendToConsole(`\nProcess closed with code ${msg.code}]\n`);
       }
     };
 
@@ -29,66 +36,92 @@ function App() {
     return () => socket.close();
   }, []);
 
-  const appendToTerminal = (text) => {
-    setTerminalLines(prev => [...prev, ...text.split('\n')]);
-    setTimeout(() => {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
-    }, 50);
+  const appendToConsole = (text) => {
+    setConsoleText(prev => {
+      const newText = prev + text;
+      setTimeout(() => {
+        setInputStart(newText.length);
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newText.length, newText.length);
+      }, 0);
+      return newText;
+    });
   };
 
   const handleRun = () => {
-    setTerminalLines([]);
+    setAllowInput(true);
+    setConsoleText('');
+    setInputStart(0);
     socketRef.current.send(JSON.stringify({
       type: 'code',
       code
     }));
   };
 
-  const handleTerminalKeyDown = (e) => {
+  const handleChange = (e) => {
+    const value = e.target.value;
+    if (value.length < inputStart) return;
+
+    setConsoleText(prev => {
+      const fixed = prev.slice(0, inputStart);
+      return fixed + value.slice(inputStart);
+    });
+  };
+
+  const handleKeyDown = (e) => {
+    if (!allowInput){
+      e.preventDefault();
+      return;
+    }
+
+    const cursorPos = textareaRef.current.selectionStart;
+
+    // prevent move cursor to before current input
+    if (cursorPos < inputStart) {
+      e.preventDefault();
+      textareaRef.current.setSelectionRange(consoleText.length, consoleText.length);
+    }
+
+    if (e.key === 'Backspace' && cursorPos <= inputStart) {
+      e.preventDefault();
+    }
+
     if (e.key === 'Enter') {
       e.preventDefault();
-      const input = currentInput;
-      setTerminalLines(prev => [...prev, `> ${input}`]);
+      const input = consoleText.slice(inputStart);
       socketRef.current.send(JSON.stringify({
         type: 'input',
         data: input
       }));
-      setCurrentInput('');
+      appendToConsole('\n');
     }
   };
 
   return (
     <div className="ide-container">
-    <div className="topbar">
-      <button className="run-btn" onClick={handleRun}>▶ Executar</button>
-    </div>
+      <div className="topbar">
+        <button className="run-btn" onClick={handleRun}>▶ Run</button>
+      </div>
 
-    <div className="editor-container">
-      <Editor
-        height="100%"
-        defaultLanguage="plaintext"
-        theme="vs-dark"
-        value={code}
-        onChange={(value) => setCode(value)}
-      />
-    </div>
-
-    <div className="terminal-container" ref={terminalRef}>
-      {terminalLines.map((line, index) => (
-        <div key={index} className="terminal-line">{line}</div>
-      ))}
-      <div className="terminal-input-line">
-        <span className="terminal-prompt">&gt;</span>
-        <input
-          type="text"
-          value={currentInput}
-          onChange={e => setCurrentInput(e.target.value)}
-          onKeyDown={handleTerminalKeyDown}
-          className="terminal-input"
+      <div className="editor-container">
+        <Editor
+          height="100%"
+          defaultLanguage="plaintext"
+          theme="vs-dark"
+          value={code}
+          onChange={(value) => setCode(value)}
         />
       </div>
+
+      <textarea
+        ref={textareaRef}
+        value={consoleText}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        className="terminal-textarea"
+        spellCheck={false}
+      />
     </div>
-  </div>
   );
 }
 
