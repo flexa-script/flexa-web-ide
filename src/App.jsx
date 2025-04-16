@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import Editor from '@monaco-editor/react';
 import './App.css';
 
 function App() {
   const [code, setCode] = useState(`// Visit https://flexa-script.github.io/ for docs
 
-println("Hello!");
-var name = read("What\'s your name? ");
-println("Hello, " + name + \'!\');
+println("Hello there!");
+var name = read("What's your name? ");
+println("Nice to meet you, " + name + '!');
 `);
   const [consoleText, setConsoleText] = useState('');
   const [inputStart, setInputStart] = useState(0);
   const [allowInput, setAllowInput] = useState(false);
   const socketRef = useRef(null);
   const textareaRef = useRef(null);
+  const userId = useRef(uuidv4());
 
   useEffect(() => {
     const socket = new WebSocket('ws://localhost:3002');
@@ -27,11 +29,11 @@ println("Hello, " + name + \'!\');
         appendToConsole(msg.data);
       } else if (msg.type === 'exit') {
         setAllowInput(false);
-        appendToConsole(`\nProcess closed with code ${msg.code}]\n`);
+        appendToConsole(`\nProcess closed with code ${msg.code}\n`);
       }
     };
 
-    socket.onclose = () => console.log('WebSocket desconectado');
+    socket.onclose = () => console.log('WebSocket disconected');
 
     return () => socket.close();
   }, []);
@@ -54,6 +56,7 @@ println("Hello, " + name + \'!\');
     setInputStart(0);
     socketRef.current.send(JSON.stringify({
       type: 'code',
+      userId: userId.current,
       code
     }));
   };
@@ -105,8 +108,8 @@ println("Hello, " + name + \'!\');
 
       <div className="editor-container">
         <Editor
-          height="100%"
-          defaultLanguage="plaintext"
+          // height="100%"
+          defaultLanguage="go"
           theme="vs-dark"
           value={code}
           onChange={(value) => setCode(value)}
