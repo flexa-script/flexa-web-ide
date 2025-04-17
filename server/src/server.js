@@ -52,7 +52,7 @@ wss.on('connection', (ws) => {
             currentContainer.kill();
             currentContainer = null;
           }
-        }, 5000);
+        }, 1000 * 60 * 5);
 
         dockerCmd.stdout.on('data', (data) => {
           ws.send(JSON.stringify({ type: 'output', data: data.toString() }));
