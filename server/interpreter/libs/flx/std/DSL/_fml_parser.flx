@@ -1,0 +1,229 @@
+namespace flx;
+
+using flx.std.collections.dictionary;
+using flx.std.collections.stack;
+using flx.std.DSL._token;
+using flx.std.chars;
+
+enum {
+	PSR_CONTEXT_KEY,
+	PSR_CONTEXT_ARRAY
+}
+
+struct _FmlParser {
+	var data: string;
+	var parsed_data: Dictionary;
+
+	// Control variables
+	var tokens: _Token[];
+	var curr_token: _Token;
+
+	var curr_index: int;
+
+	var key: string;
+	var value: any;
+	var arr_stack: Stack; 
+
+	var context: int;
+
+	var is_sub_value: bool;
+
+}
+
+fun _fml_parse(parser: _FmlParser);
+fun _fml_statement(parser: _FmlParser);
+fun _fml_value(parser: _FmlParser);
+
+fun _fml_next_token(parser: _FmlParser) {
+	parser.curr_index++;
+	if (parser.curr_index < len(parser.tokens)) {
+		parser.curr_token = parser.tokens[parser.curr_index];
+	}
+}
+
+fun _fml_consume_token(parser: _FmlParser, category: int) {
+	if (parser.curr_token.type != category) {
+		throw "Invalid token '" + parser.curr_token.image + "' encountered at line "
+			+ string(parser.curr_token.row) + " and column " + string(parser.curr_token.col)
+			+ ". Expected " + TOKEN_IMAGE[category] + ".";
+	}
+	_fml_next_token(parser);
+}
+
+fun _fml_close_array(parser: _FmlParser) {
+	if (len(parser.arr_stack) > 1) {
+		pop(parser.arr_stack);
+	} else {
+		parser.context = PSR_CONTEXT_KEY;
+		emplace(parser.parsed_data, parser.key, peek(parser.arr_stack));
+		pop(parser.arr_stack);
+	}
+}
+
+fun _fml_open_array(parser: _FmlParser) {
+	if (is_empty(parser.arr_stack)) {
+		parser.context = PSR_CONTEXT_ARRAY;
+		push(parser.arr_stack, {});
+	} else {
+		var new_dim = {};
+		// var pv = peek(parser.arr_stack);
+		// pv += { ref new_dim };
+		peek(parser.arr_stack) += { ref new_dim };
+		push(parser.arr_stack, ref new_dim);
+	}
+}
+
+fun _fml_set_value(parser: _FmlParser) {
+	if (parser.context == PSR_CONTEXT_ARRAY) {
+		// var pv = peek(parser.arr_stack);
+		// pv += { parser.value };
+		peek(parser.arr_stack) += { parser.value };
+	} else {
+		emplace(parser.parsed_data, parser.key, parser.value);
+	}
+	_fml_next_token(parser);
+}
+
+fun _null_value(parser: _FmlParser) {
+	parser.value = null;
+	_fml_set_value(parser);
+}
+
+fun _fml_bool_value(parser: _FmlParser) {
+	parser.value = parser.curr_token.image == "true";
+	_fml_set_value(parser);
+}
+
+fun _fml_float_value(parser: _FmlParser) {
+	var strValue: string = ends_with(to_lower(parser.curr_token.image), "f") ?
+					substr(parser.curr_token.image, 0, len(parser.curr_token.image) - 1) : parser.curr_token.image;
+	parser.value = float(strValue);
+	_fml_set_value(parser);
+}
+
+fun _fml_integer_value(parser: _FmlParser) {
+	parser.value = int(parser.curr_token.image);
+	_fml_set_value(parser);
+}
+
+fun _fml_char_value(parser: _FmlParser) {
+	var stringValue = substr(parser.curr_token.image, 1, len(parser.curr_token.image) - 1);
+	stringValue = starts_with(stringValue, "\\") ? substr(stringValue, 1) : stringValue;
+	parser.value = stringValue[0];
+	_fml_set_value(parser);
+}
+
+fun _fml_string_value(parser: _FmlParser) {
+	parser.value = substr(parser.curr_token.image, 1, len(parser.curr_token.image) - 1);
+	_fml_set_value(parser);
+}
+
+fun _fml_array(parser: _FmlParser) {
+	_fml_open_array(parser);
+	_fml_next_token(parser);
+	_fml_value(parser);
+}
+
+fun _fml_array_selector(parser: _FmlParser) {
+	switch (parser.curr_token.type) {
+		case TKC_ARRAY_SEP:
+			_fml_next_token(parser);
+			_fml_value(parser);
+			break;
+		case TKC_CLOSE_ARRAY:
+			_fml_close_array(parser);
+			_fml_next_token(parser);
+			_fml_array_selector(parser);
+			break;
+		case TKC_END_OF_DATA:
+		case TKC_EOF:
+			break;
+		default:
+			throw "Invalid token '" + parser.curr_token.image + "' encountered at line "
+				+ string(parser.curr_token.row) + " and column " + string(parser.curr_token.col) + ". Expected ',', ']' or ';'.";
+	}
+}
+
+fun _fml_sub_value(parser: _FmlParser) {
+	var subValueParser: _FmlParser = _FmlParser {
+			parsed_data=create_dictionary(),
+			tokens=parser.tokens,
+			curr_index=parser.curr_index - 1,
+			arr_stack=create_stack(),
+			context=PSR_CONTEXT_KEY,
+			is_sub_value=true
+	};
+	_fml_parse(subValueParser);
+	parser.value = subValueParser.parsed_data;
+	parser.curr_index = subValueParser.curr_index - 1;
+	_fml_set_value(parser);
+}
+
+fun _fml_value(parser: _FmlParser) {
+	switch (parser.curr_token.type) {
+		case TKC_OPEN_ARRAY:
+			_fml_array(parser);
+			break;
+		case TKC_STRING:
+			_fml_string_value(parser);
+			break;
+		case TKC_CHAR:
+			_fml_char_value(parser);
+			break;
+		case TKC_INTEGER:
+			_fml_integer_value(parser);
+			break;
+		case TKC_FLOAT:
+			_fml_float_value(parser);
+			break;
+		case TKC_BOOL:
+			_fml_bool_value(parser);
+			break;
+		case TKC_NULL:
+			_null_value(parser);
+			break;
+		case TKC_KEY:
+			_fml_sub_value(parser);
+			break;
+		default:
+			throw "Invalid token '" + parser.curr_token.image + "' encountered at line "
+				+ string(parser.curr_token.row) + " and column " + string(parser.curr_token.col) + ". Expected a value or array.";
+	}
+
+	if (parser.context == PSR_CONTEXT_ARRAY) {
+		_fml_array_selector(parser);
+	}
+}
+
+fun _fml_key(parser: _FmlParser) {
+	parser.key = parser.curr_token.image;
+	_fml_next_token(parser);
+	_fml_consume_token(parser, TKC_DATA_SEP);
+	_fml_value(parser);
+	_fml_consume_token(parser, TKC_END_OF_DATA);
+	_fml_statement(parser);
+}
+
+fun _fml_statement(parser: _FmlParser) {
+	if (parser.curr_token.type == TKC_KEY) {
+		_fml_key(parser);
+	}
+}
+
+fun _fml_start(parser: _FmlParser) {
+	_fml_next_token(parser);
+	_fml_statement(parser);
+	if (not parser.is_sub_value) {
+		_fml_consume_token(parser, TKC_EOF);
+	}
+}
+
+fun _fml_parse(parser: _FmlParser) {
+	if (not parser.is_sub_value) {
+		parser.tokens = _fml_tokenize(parser.data);
+	}
+
+	_fml_start(parser);
+
+	return parser;
+}

@@ -1,0 +1,119 @@
+// collection standard lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+using flx.std.types;
+
+struct Node {
+	var value: any;
+	var next: Node;
+	var prev: Node;
+}
+
+struct Collection {
+	var first: Node;
+	var last: Node;
+	var size: int;
+}
+
+fun create_collection(): Collection {
+	return Collection{first=null, last=null, size=0};
+}
+
+fun _default_append(collection: Collection, value: any) {
+	if (collection.first == null) {
+		collection.first = Node{value=ref value, next=null, prev=null};
+		collection.last = collection.first;
+		collection.size = 1;
+	} else if (ref collection.first == ref collection.last) {
+		var new_node = Node{value=ref value, prev=collection.first, next=null};
+		collection.first.next = new_node;
+		collection.last = new_node;
+		collection.size = 2;
+	} else {
+		var new_node = Node{value=ref value, prev=collection.last, next=null};
+		collection.last.next = new_node;
+		collection.last = new_node;
+		collection.size++;
+	}
+}
+
+fun _default_get(collection: Collection): any {
+	if (collection.first == null) {
+		throw "Tryed to get from empty collection";
+	}
+
+	return ref collection.last.value;
+}
+
+fun _default_remove(collection: Collection) {
+	if (collection.first == null) {
+		throw "Tryed to remove from empty collection";
+	}
+	if (collection.size == 1) {
+		collection.first = null;
+		collection.last = null;
+	} else {
+		collection.last = collection.last.prev;
+		collection.last.next = null;
+	}
+	collection.size--;
+}
+
+fun exists(collection: Collection, value: any, comparator: function = null) {
+	var current = collection.first;
+
+	while (current != null) {
+		if (comparator != null) {
+			if (comparator(current.value, value)) {
+				return true;
+			}
+		} else {
+			if (current.value == value) {
+				return true;
+			}
+		}
+		current = current.next;
+	}
+
+	return false;
+}
+
+fun clear(collection: Collection) {
+	collection.first = null;
+	collection.last = null;
+	collection.size = 0;
+}
+
+fun is_empty(collection: Collection): bool {
+	return collection.size == 0;
+}
+
+fun len(collection: Collection): int {
+	return collection.size;
+}
+
+fun to_array(collection: Collection): any[] {
+	var arr: any[collection.size] = {null};
+	var curr_node = collection.first;
+	for (var i = 0; i < collection.size; i++) {
+		if (typeof(curr_node.value) == typeof(Collection)) {
+			arr[i] = to_array(curr_node.value);
+		} else {
+			arr[i] = curr_node.value;
+		}
+		curr_node = curr_node.next;
+	}
+	return arr;
+}
+
+fun copy(collection: Collection): Collection {
+	var copy = Collection{};
+	var arr = to_array(collection);
+	foreach (var v in arr) {
+		_default_append(copy, v);
+	}
+	return copy;
+}

@@ -1,0 +1,72 @@
+// YAML standard lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+using flx.std.collections.dictionary;
+using flx.std.strings;
+
+fun _yaml_stringify_value(value: any, level: int): string;
+fun _yaml_stringify_data(data: Dictionary, level: int = 0): string;
+fun yaml_stringify(data: Dictionary): string;
+
+fun _yaml_stringify_value(value: any, level: int): string {
+	var yaml: string = "";
+
+	if (typeof(value) == typeof(Dictionary)) {
+		level++;
+		yaml = "\n";
+		yaml += _yaml_stringify_data(value, level);
+		level--;
+	} else if (is_struct(value)) {
+		level++;
+		yaml = "\n";
+		yaml += _yaml_stringify_data(parse_struct(value), level);
+		level--;
+	} else if (typeof(value) in {typeof(string), typeof(char)}) {
+		yaml = " \"" + string(value) + "\"\n";
+	} else if (is_array(value)) {
+		level++;
+		yaml = '\n';
+		foreach (var v in value) {
+			yaml += repeat(" ", level * 2);
+			yaml += "-" + _yaml_stringify_value(v, level);
+		}
+		level--;
+	} else {
+		yaml = ' ' + string(value) + '\n';
+	}
+	
+	return yaml;
+}
+
+fun _yaml_stringify_data(data: Dictionary, level: int): string {
+	var yaml: string = "";
+	var visited_list = create_list();
+	var current_stack = create_stack();
+	var current = data.root;
+
+	while (current != null) {
+		if (not exists(visited_list, current.key)) {
+			push(current_stack, current);
+			append(visited_list, current.key);
+			yaml += repeat(" ", level * 2);
+			yaml += current.key + ":" + _yaml_stringify_value(current.value, level);
+		}
+		if (current.left != null and not exists(visited_list, current.left.key)) {
+			current = current.left;
+		} else if (current.right != null and not exists(visited_list, current.right.key)) {
+			current = current.right;
+		} else {
+			pop(current_stack);
+			current = len(current_stack) > 0 ? peek(current_stack) : null;
+		}
+	}
+
+	return yaml;
+}
+
+fun yaml_stringify(data: Dictionary): string {
+	return "---\n" + _yaml_stringify_data(data) + "...";
+}

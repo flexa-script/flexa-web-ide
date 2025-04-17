@@ -1,0 +1,35 @@
+// files core lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+const PATH_SEPARATOR = "/";
+
+const MODE_READ: int = 1;
+const MODE_WRITE: int = 2;
+const MODE_APPEND: int = 8;
+const MODE_BINARY: int = 32;
+
+struct File {
+	var path: string;
+	var mode: int;
+}
+
+fun open(path: string, mode: int): File;
+fun read(file: File): string;
+fun read_line(file: File): string;
+fun read_all_bytes(file: File): char[];
+fun write(file: File, data: string);
+fun write_bytes(file: File, bytes: char[]);
+fun is_open(file: File): bool;
+fun close(file: File);
+
+fun is_file(path: string): bool;
+fun is_dir(path: string): bool;
+
+fun create_dir(path: string);
+fun list_dir(path: string): string[];
+
+fun path_exists(path: string): bool;
+fun delete_path(path: string);

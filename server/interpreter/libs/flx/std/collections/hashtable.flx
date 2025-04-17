@@ -1,0 +1,86 @@
+// hashtable standard lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+using flx.std.types;
+using flx.std.math;
+
+const HASHTABLE_SIZE: int = 999;
+
+struct Hashtable {
+	var keys: string[HASHTABLE_SIZE];
+	var values: any[HASHTABLE_SIZE];
+	var size: int;
+}
+
+fun create_hashtable(): Hashtable {
+	return Hashtable{keys={}, values={}, size=0};
+}
+
+fun hashtable_hash(key: string): int {
+	return hash(key) % HASHTABLE_SIZE;
+}
+
+fun put(ht: Hashtable, key: string, value: any) {
+	var h = hashtable_hash(key);
+	while (ht.keys[h] != null and ht.keys[h] != key) {
+		h = (h + 1) % HASHTABLE_SIZE;
+	}
+	ht.keys[h] = key;
+	ht.values[h] = ref value;
+	ht.size++;
+}
+
+fun delete(ht: Hashtable, key: string) {
+	var h = hashtable_hash(key);
+	if (ht.keys[h] == null) {
+		throw "Tryed deleting non existent key";
+	}
+	ht.keys[h] = null;
+	ht.values[h] = null;
+	ht.size--;
+}
+
+fun get(ht: Hashtable, key: string): any {
+	var h = hashtable_hash(key);
+	if (ht.keys[h] == null) {
+		throw "Tryed get from non existent key";
+	}
+	return ht.values[h];
+}
+
+fun to_array(ht: Hashtable): any[] {
+	var ht_arr: [] = {};
+
+	for (var i = 0; i < HASHTABLE_SIZE; i++) {
+		if (ht.keys[i] != null) {
+			ht_arr += { Pair{key=ht.keys[i], value=ref ht.values[i]} };
+		}
+	}
+
+	return ht_arr;
+}
+
+fun clear(ht: Hashtable) {
+	ht = create_hashtable();
+}
+
+fun len(ht: Hashtable) {
+	return ht.size;
+}
+
+fun copy(ht: Hashtable) {
+	var kc: string[HASHTABLE_SIZE] = {};
+	var vc: any[HASHTABLE_SIZE] = {};
+	
+	for (var i = 0; i < HASHTABLE_SIZE; i++) {
+		if (ht.keys[i] != null) {
+			kc[i] = ht.keys[i];
+			vc[i] = ref ht.values[i];
+		}
+	}
+
+	return Hashtable{keys=kc, values=vc, size=ht.size};
+}

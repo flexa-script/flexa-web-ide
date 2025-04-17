@@ -1,0 +1,30 @@
+// console core lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+enum {
+	CL_BLACK,
+	CL_BLUE,
+	CL_GREEN,
+	CL_AQUA,
+	CL_RED,
+	CL_PURPLE,
+	CL_YELLOW,
+	CL_WHITE,
+	CL_GRAY,
+	CL_LIGHT_BLUE,
+	CL_LIGHT_GREEN,
+	CL_LIGHT_AQUA,
+	CL_LIGHT_RED,
+	CL_LIGHT_PURPLE,
+	CL_LIGHT_YELLOW,
+	CL_BRIGHT_WHITE
+}
+
+fun show_console(show: bool);
+fun is_console_visible(): bool;
+fun set_console_color(background_color: int, foreground_color: int);
+fun set_console_cursor_position(x: int, y: int);
+fun set_console_font(font_name: string, font_width: int, font_height: int);

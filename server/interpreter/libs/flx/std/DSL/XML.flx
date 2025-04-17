@@ -1,0 +1,62 @@
+// XML standard lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+using flx.std.collections.dictionary;
+
+fun _xml_stringify_value(value: any): string;
+fun _xml_stringify_data(data: Dictionary): string;
+fun xml_stringify(data: Dictionary): string;
+
+fun _xml_stringify_value(value: any): string {
+	var xml: string = "";
+
+	if (typeof(value) == typeof(Dictionary)) {
+		xml = _xml_stringify_data(value);
+	} else if (is_struct(value)) {
+		xml = _xml_stringify_data(parse_struct(value));
+	} else if (is_array(value)) {
+		foreach (var v in value) {
+			if (is_array(v)) {
+				xml += "<array>" + _xml_stringify_value(v) + "</array>";
+			} else {
+				xml += "<item>" + _xml_stringify_value(v) + "</item>";
+			}
+		}
+	} else {
+		xml += string(value);
+	}
+	
+	return xml;
+}
+
+fun _xml_stringify_data(data: Dictionary): string {
+	var xml: string = "";
+	var visited_list = create_list();
+	var current_stack = create_stack();
+	var current = data.root;
+
+	while (current != null) {
+		if (not exists(visited_list, current.key)) {
+			push(current_stack, current);
+			append(visited_list, current.key);
+			xml += '<' + current.key + '>' + _xml_stringify_value(current.value) + "</" + current.key + '>';
+		}
+		if (current.left != null and not exists(visited_list, current.left.key)) {
+			current = current.left;
+		} else if (current.right != null and not exists(visited_list, current.right.key)) {
+			current = current.right;
+		} else {
+			pop(current_stack);
+			current = len(current_stack) > 0 ? peek(current_stack) : null;
+		}
+	}
+
+	return xml;
+}
+
+fun xml_stringify(data: Dictionary): string {
+	return "<root>" + _xml_stringify_data(data) + "</root>";
+}

@@ -1,0 +1,30 @@
+// datetime core lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+struct DateTime {
+	var timestamp: int;
+
+	var second: int;   // seconds after the minute - [0, 60] including leap second
+	var minute: int;   // minutes after the hour - [0, 59]
+	var hour: int;     // hours since midnight - [0, 23]
+	var day: int;      // day of the month - [1, 31]
+	var month: int;    // months since January - [1, 12]
+	var year: int;     // years since 1900
+
+	var week_day: int; // days since Sunday - [1, 7]
+	var year_day: int; // days since January 1 - [1, 366]
+	var is_dst: int;   // daylight savings time flag [-1, 0, 1]
+}
+
+fun create_date_time(): DateTime;
+fun create_date_time(timestamp: int): DateTime;
+fun create_date_time(year: int, month: int, day: int, hour: int, min: int, sec: int): DateTime;
+fun diff_date_time(left_date_time: DateTime, right_date_time: DateTime): DateTime;
+fun format_date_time(date_time: DateTime, format: string): string;
+fun format_local_date_time(date_time: DateTime, format: string): string;
+fun ascii_date_time(date_time: DateTime): string;
+fun ascii_local_date_time(date_time: DateTime): string;
+fun clock(): int;

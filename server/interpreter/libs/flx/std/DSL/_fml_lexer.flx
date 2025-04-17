@@ -1,0 +1,200 @@
+namespace flx;
+
+using flx.std.collections.dictionary;
+using flx.std.collections.stack;
+using flx.std.DSL._token;
+using flx.std.chars;
+
+struct _FmlLexer {
+    var input: string;
+
+    var prev_char: char;
+    var curr_char: char;
+    var next_char: char;
+
+    var prev_index: int;
+    var curr_index: int;
+    var next_index: int;
+
+    var curr_row: int;
+    var curr_col: int;
+
+}
+
+fun _fml_not_end_of_input(lexer: _FmlLexer): bool {
+	return lexer.curr_index < len(lexer.input);
+}
+
+fun _fml_next_line(lexer: _FmlLexer) {
+	lexer.curr_row++;
+	lexer.curr_col = 0;
+}
+
+fun _fml_next_char(lexer: _FmlLexer) {
+	lexer.prev_index++;
+	lexer.curr_index++;
+	lexer.next_index++;
+
+	if (lexer.curr_index < len(lexer.input)) {
+		lexer.prev_char = lexer.prev_index >= 0 ? lexer.input[lexer.prev_index] : '\0';
+		lexer.curr_char = lexer.input[lexer.curr_index];
+		lexer.next_char = lexer.next_index < len(lexer.input) ? lexer.input[lexer.next_index] : '\0';
+		lexer.curr_col++;
+	}
+}
+
+fun _fml_tokenize(input: string): _Token[] {
+	var tokens: _Token[] = {};
+	var lexer = _FmlLexer{
+		input=input,
+		prev_index=-2,
+		curr_index=-1,
+		next_index=0,
+		curr_row=1,
+		curr_col=1
+	};
+
+	_fml_next_char(lexer);
+	
+	while (_fml_not_end_of_input(lexer)) {
+		// Skip whitespace and newlines
+		if (_is_skip(lexer.curr_char)) {
+			if (lexer.curr_char == SYM_NEWLINE) {
+				_fml_next_line(lexer);
+			}
+			_fml_next_char(lexer);
+			continue;
+		}
+
+		// Skip comments
+		if (lexer.curr_char == SYM_HASH) {
+			while (_fml_not_end_of_input(lexer) and lexer.curr_char != SYM_NEWLINE) {
+				_fml_next_char(lexer);
+			}
+			_fml_next_line(lexer);
+			_fml_next_char(lexer);
+		}
+		// Key, boolean, or null
+		else if (is_letter(lexer.curr_char) or lexer.curr_char == SYM_UNDERSCORE) {
+			var lexeme = string(lexer.curr_char);
+			var init_col = lexer.curr_col;
+			_fml_next_char(lexer);
+
+			// Loop through the current lexeme
+			while (_fml_not_end_of_input(lexer)
+					and ((lexer.curr_char != SYM_COLON and lexer.curr_char != SYM_SEMICOLON) or lexer.prev_char == '\\')
+					and not ((lexeme in { "true", "false" }) or lexeme == "null" and lexer.curr_char == SYM_COMMA)) {
+				lexeme += lexer.curr_char;
+				_fml_next_char(lexer);
+			}
+
+			// Boolean
+			if (lexeme in { "true", "false" }) {
+				tokens += { _Token{type=TKC_BOOL, image=lexeme, row=lexer.curr_row, col=init_col} };
+			}
+			// Null
+			else if (lexeme == "null") {
+				tokens += { _Token{type=TKC_NULL, image=lexeme, row=lexer.curr_row, col=init_col} };
+			}
+			// Key
+			else {
+				tokens += { _Token{type=TKC_KEY, image=lexeme, row=lexer.curr_row, col=init_col} };
+			}
+		}
+		// Open array
+		else if (lexer.curr_char == SYM_LEFT_BRACKETS) {
+			tokens += { _Token{type=TKC_OPEN_ARRAY, image=lexer.curr_char, row=lexer.curr_row, col=lexer.curr_col} };
+			_fml_next_char(lexer);
+		}
+		// Close array
+		else if (lexer.curr_char == SYM_RIGHT_BRACKETS) {
+			tokens += { _Token{type=TKC_CLOSE_ARRAY, image=lexer.curr_char, row=lexer.curr_row, col=lexer.curr_col} };
+			_fml_next_char(lexer);
+		}
+		// End of data
+		else if (lexer.curr_char == SYM_SEMICOLON) {
+			tokens += { _Token{type=TKC_END_OF_DATA, image=lexer.curr_char, row=lexer.curr_row, col=lexer.curr_col} };
+			_fml_next_char(lexer);
+		}
+		// Array separator
+		else if (lexer.curr_char == SYM_COMMA) {
+			tokens += { _Token{type=TKC_ARRAY_SEP, image=lexer.curr_char, row=lexer.curr_row, col=lexer.curr_col} };
+			_fml_next_char(lexer);
+		}
+		// Data separator
+		else if (lexer.curr_char == SYM_COLON) {
+			tokens += { _Token{type=TKC_DATA_SEP, image=lexer.curr_char, row=lexer.curr_row, col=lexer.curr_col} };
+			_fml_next_char(lexer);
+		}
+		// String
+		else if (lexer.curr_char == SYM_D_QUOTE) {
+			var lexeme: string = lexer.curr_char;
+			var init_col = lexer.curr_col;
+			_fml_next_char(lexer);
+			while (_fml_not_end_of_input(lexer) and (lexer.curr_char != SYM_D_QUOTE or lexer.prev_char == '\\')) {
+				if (lexer.curr_char != '\\' or lexer.prev_char == '\\') {
+					lexeme += lexer.curr_char;
+				}
+				_fml_next_char(lexer);
+			}
+			if (lexer.curr_char != SYM_D_QUOTE) {
+				throw "String was not closed at line " + string(lexer.curr_row) + " and column " + string(lexer.curr_col) + ".";
+			}
+			lexeme += lexer.curr_char;
+			tokens += { _Token{type=TKC_STRING, image=lexeme, row=lexer.curr_row, col=init_col} };
+			_fml_next_char(lexer);
+		}
+		// Char
+		else if (lexer.curr_char == SYM_QUOTE) {
+			var lexeme: string = lexer.curr_char;
+			var init_col = lexer.curr_col;
+			_fml_next_char(lexer);
+			if (lexer.curr_char == '\\') {
+				lexeme += lexer.curr_char;
+				_fml_next_char(lexer);
+			}
+			lexeme += lexer.curr_char;
+			_fml_next_char(lexer);
+			if (lexer.curr_char != SYM_QUOTE) {
+				throw "Char was not closed at line " + string(lexer.curr_row) + " and column " + string(lexer.curr_col) + ".";
+			}
+			lexeme += lexer.curr_char;
+			tokens += { _Token{type=TKC_CHAR, image=lexeme, row=lexer.curr_row, col=init_col} };
+			_fml_next_char(lexer);
+		}
+		// Numeric
+		else if (is_digit(lexer.curr_char) or lexer.curr_char == SYM_DOT or lexer.curr_char == SYM_MINUS) {
+			var lexeme: string = lexer.curr_char;
+			var init_col = lexer.curr_col;
+			var dotted = lexer.curr_char == SYM_DOT;
+			_fml_next_char(lexer);
+			while (_fml_not_end_of_input(lexer) and (is_digit(lexer.curr_char) or lexer.curr_char == SYM_DOT)) {
+				if (lexer.curr_char == SYM_DOT) {
+					if (dotted) {
+						throw "Invalid character '" + lexer.curr_char + "' encountered at line " + string(lexer.curr_row) + " and column " + string(lexer.curr_col) + ".";
+					} else {
+						dotted = true;
+					}
+				}
+				lexeme += lexer.curr_char;
+				_fml_next_char(lexer);
+			}
+			if (to_lower(string(lexer.curr_char)) == "f") {
+				lexeme += lexer.curr_char;
+				_fml_next_char(lexer);
+			}
+			// Float or integer
+			if ((SYM_DOT in lexeme) or ("f" in to_lower(lexeme))) {
+				tokens += { _Token{type=TKC_FLOAT, image=lexeme, row=lexer.curr_row, col=init_col} };
+			} else {
+				tokens += { _Token{type=TKC_INTEGER, image=lexeme, row=lexer.curr_row, col=init_col} };
+			}
+		} else {
+			throw "Invalid character '" + lexer.curr_char + "' encountered at line " + string(lexer.curr_row) + " and column " + string(lexer.curr_col) + ".";
+		}
+	}
+
+	tokens += { _Token{type=TKC_EOF, image=null, row=-1, col=-1} };
+
+	return tokens;
+}

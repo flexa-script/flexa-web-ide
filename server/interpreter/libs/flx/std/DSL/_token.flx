@@ -1,0 +1,62 @@
+namespace flx;
+
+enum {
+  TKC_EOF,
+  TKC_KEY,
+  TKC_NULL,
+  TKC_STRING,
+  TKC_CHAR,
+  TKC_INTEGER,
+  TKC_FLOAT,
+  TKC_BOOL,
+  TKC_OPEN_ARRAY,
+  TKC_CLOSE_ARRAY,
+  TKC_END_OF_DATA,
+  TKC_DATA_SEP,
+  TKC_ARRAY_SEP
+}
+
+const TOKEN_IMAGE: string[] = {
+  "EOF",
+  "key",
+  "null constant",
+  "string constant",
+  "char constant",
+  "integer constant",
+  "float constant",
+  "bool constant",
+  "{",
+  "}",
+  ";",
+  ":",
+  ","
+};
+
+const SYM_HASH: char = '#';
+const SYM_LEFT_BRACKETS: char = '{';
+const SYM_RIGHT_BRACKETS: char = '}';
+const SYM_DOT: char = '.';
+const SYM_COMMA: char = ',';
+const SYM_COLON: char = ':';
+const SYM_SEMICOLON: char = ';';
+const SYM_MINUS: char = '-';
+const SYM_UNDERSCORE: char = '_';
+const SYM_D_QUOTE: char = '"';
+const SYM_SPACE: char = ' ';
+const SYM_QUOTE: char = '\'';
+const SYM_NEWLINE: char = '\n';
+const SYM_RETURN: char = '\r';
+const SYM_TAB: char = '\t';
+
+const SKIP_CHARS: char[] = { SYM_SPACE, SYM_TAB, SYM_NEWLINE, SYM_RETURN };
+
+fun _is_skip(c: char): bool {
+  return c in SKIP_CHARS;
+}
+
+struct _Token {
+  var type: int;
+  var image: string;
+  var row: int;
+  var col: int;
+}

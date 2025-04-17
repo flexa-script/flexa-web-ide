@@ -1,0 +1,213 @@
+// strings standard lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+const _CONVERTER = 32;
+const _LOWER = "abcdefghijklmnopqrstuvwxyzàáâãäèéêëìíîïòóôõöùúüŷç";
+const _UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÜŶÇ";
+
+fun substr(str: string, start: int, end: int = null): string {
+	var ss = "";
+	if (end == null) {
+		end = len(str);
+	}
+	for (var i = start; i < end; i++) {
+		ss += str[i];
+	}
+	return ss;
+}
+
+fun repeat(str: string, count: int): string {
+	var res = "";
+	for (var i = 0; i < count; i++) {
+		res += str;
+	}
+	return res;
+}
+
+fun contains(str: string, strc: string): bool {
+	var str_size = len(str);
+	var strc_size = len(strc);
+	var start: int = 0;
+	var end: int = strc_size;
+
+	if (str_size < strc_size) {
+		return false;
+	}
+
+	while (end <= str_size) {
+		if (substr(str, start, end) == strc) {
+			return true;
+		}
+		start++;
+		end++;
+	}
+
+	return false;
+}
+
+fun counts(str: string, strc: string): int {
+	var str_size = len(str);
+	var strc_size = len(strc);
+	var start: int = 0;
+	var end: int = strc_size;
+
+	var count: int = 0;
+
+	if (str_size < strc_size) {
+		return count;
+	}
+
+	while (end <= str_size) {
+		if (substr(str, start, end) == strc) {
+			count++;
+		}
+		start++;
+		end++;
+	}
+
+	return count;
+}
+
+fun starts_with(str: string, strc: string): bool {
+	var str_size = len(str);
+	var strc_size = len(strc);
+
+	if (str_size < strc_size) {
+		return false;
+	}
+
+	if (substr(str, 0, strc_size) == strc) {
+		return true;
+	}
+
+	return false;
+}
+
+fun ends_with(str: string, strc: string): bool {
+	var str_size = len(str);
+	var strc_size = len(strc);
+
+	if (str_size < strc_size) {
+		return false;
+	}
+
+	if (substr(str, str_size - strc_size) == strc) {
+		return true;
+	}
+
+	return false;
+}
+
+fun join(...args: any): string {
+	var ss: string = "";
+	foreach (var a in args) {
+		ss += string(a);
+	}
+	return ss;
+}
+
+fun left_trim(str: string): string {
+	var start = 0;
+	while (str[start] == ' ') {
+		start++;
+	}
+	return substr(str, start);
+}
+
+fun right_trim(str: string): string {
+	var end = len(str) - 1;
+	while (str[end] == ' ') {
+		end--;
+	}
+	return substr(str, 0, end + 1);
+}
+
+fun trim(str: string): string {
+	return left_trim(right_trim(str));
+}
+
+fun split(str: string, strc: string): string[] {
+	var str_size = len(str);
+	var strc_size = len(strc);
+
+	if (str_size < strc_size) {
+		return {};
+	}
+
+	var size: int = counts(str, strc) + 1;
+	var splitted: string[size] = {""};
+	var res_i: int = 0;
+	var start: int = 0;
+	var end: int = strc_size;
+
+	while (end <= str_size) {
+		if (substr(str, start, end) == strc) {
+			res_i++;
+			start += strc_size;
+			end += strc_size;
+			continue;
+		}
+		splitted[res_i] += str[start];
+		start++;
+		end++;
+	}
+
+	return splitted;
+}
+
+fun replace(str: string, strc: string, strr: string): string {
+	var str_size = len(str);
+	var strc_size = len(strc);
+	var strr_size = len(strr);
+
+	if (str_size < strc_size) {
+		return str;
+	}
+
+	var ss: string = "";
+	var res_i: int = 0;
+	var start: int = 0;
+	var end: int = strc_size;
+
+	while (end <= str_size) {
+		if (substr(str, start, end) == strc) {
+			ss += strr;
+			start += strc_size;
+			end += strc_size;
+			continue;
+		}
+		ss += str[start];
+		start++;
+		end++;
+	}
+
+	return ss;
+}
+
+fun to_string(value: any): string {
+	return string(value);
+}
+
+fun _turn_case(str: string, dir: int = 1): string {
+	var ss: string = "";
+	var str_size = len(str);
+	var dict = dir == 1 ? _LOWER : _UPPER;
+	var conv = _CONVERTER * dir;
+	
+	for (var i: int = 0; i < str_size; i++) {
+		ss += str[i] in dict ? char(int(str[i]) - conv) : str[i];
+	}
+
+	return ss;
+}
+
+fun to_upper(str: string): string {
+	return _turn_case(str);
+}
+
+fun to_lower(str: string): string {
+	return _turn_case(str, -1);
+}

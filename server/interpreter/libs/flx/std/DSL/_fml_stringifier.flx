@@ -1,0 +1,67 @@
+namespace flx;
+
+using flx.std.collections.dictionary;
+using flx.std.collections.stack;
+using flx.std.DSL._token;
+using flx.std.chars;
+
+fun _fml_stringify(data: Dictionary): string;
+
+fun _fml_stringify_value(value: any): string {
+	var str_value: string = "";
+
+	if (typeof(value) == typeof(Dictionary)) {
+		str_value = _fml_stringify(value);
+	} else if (is_struct(value)) {
+		str_value = _fml_stringify(parse_struct(value));
+	} else if (typeof(value) == typeof(string)) {
+		str_value = '"' + string(value) + '"';
+	} else if (typeof(value) == typeof(char)) {
+		str_value = "'" + string(value) + "'";
+	} else if (is_array(value)) {
+		str_value = "[";
+		foreach (var v in value) {
+			str_value += _fml_stringify_value(v) + ",";
+		}
+
+		if (str_value[len(str_value) - 1] == ',') {
+			str_value = substr(str_value, 0, len(str_value) - 1);
+		}
+
+		str_value += "]";
+
+	} else {
+		str_value += string(value);
+	}
+	
+	return str_value;
+}
+
+fun _fml_stringify(data: Dictionary): string {
+	var bps_str: string = "";
+	var visited_list = create_list();
+	var current_stack = create_stack();
+	var current = data.root;
+
+	while (current != null) {
+		if (not exists(visited_list, current.key)) {
+			push(current_stack, current);
+			append(visited_list, current.key);
+			bps_str += current.key + ':' + _fml_stringify_value(current.value) + ';';
+		}
+		if (current.left != null and not exists(visited_list, current.left.key)) {
+			current = current.left;
+		} else if (current.right != null and not exists(visited_list, current.right.key)) {
+			current = current.right;
+		} else {
+			pop(current_stack);
+			current = len(current_stack) > 0 ? peek(current_stack) : null;
+		}
+	}
+
+	if (bps_str[len(bps_str) - 1] == ',') {
+		bps_str = substr(bps_str, 0, len(bps_str) - 1);
+	}
+
+	return bps_str;
+}

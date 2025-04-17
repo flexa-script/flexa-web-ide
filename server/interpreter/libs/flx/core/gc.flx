@@ -1,0 +1,13 @@
+// gc core lib
+// MIT License
+// Copyright (c) 2025 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+const MAX_HEAP = 9999;
+
+fun gc_is_enabled(): bool;
+fun gc_enable(enable: bool);
+fun gc_get_max_heap(): int;
+fun gc_set_max_heap(max_heap: int);
+fun gc_collect();

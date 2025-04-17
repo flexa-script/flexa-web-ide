@@ -1,0 +1,17 @@
+// char standard lib
+// MIT License
+// Copyright (c) 2025 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+fun is_letter(value: char) {
+	return value in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+}
+
+fun is_digit(value: char) {
+	return value in "0123456789";
+}
+
+fun is_alphanum(value: char) {
+	return is_letter(value) or is_digit(value);
+}

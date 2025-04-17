@@ -1,0 +1,33 @@
+// stopwatch standard lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+using flx.core.datetime;
+
+include namespace flx;
+
+struct StopWatch {
+    var start_time: int;
+    var end_time: int;
+    var elapsed_time: int;
+}
+
+fun create_stopwatch(): StopWatch {
+	return StopWatch{start_time=0, end_time=0, elapsed_time=0};
+}
+
+fun timer_start(sw: StopWatch): void {
+	sw.elapsed_time = 0;
+    sw.start_time = clock();
+}
+
+fun timer_stop(sw: StopWatch): void {
+    sw.end_time = clock();
+	sw.elapsed_time = sw.end_time - sw.start_time;
+}
+
+fun print_elapsed_time(sw: StopWatch): void {
+    println("elapsed time: ", sw.elapsed_time, " ms");
+}

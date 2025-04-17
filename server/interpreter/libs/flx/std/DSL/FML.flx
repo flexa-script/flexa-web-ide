@@ -1,0 +1,26 @@
+// FML standard lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+using flx.std.collections.dictionary;
+using flx.std.DSL._fml_lexer;
+using flx.std.DSL._fml_parser;
+using flx.std.DSL._fml_stringifier;
+
+fun fml_parse(data: string): Dictionary {
+	return _fml_parse(_FmlParser {
+        data=data,
+        parsed_data=create_dictionary(),
+        tokens={},
+        curr_index=-1,
+        arr_stack=create_stack(),
+        context=PSR_CONTEXT_KEY,
+        is_sub_value=false
+    }).parsed_data;
+}
+
+fun fml_stringify(data: Dictionary): string {
+	return _fml_stringify(data);
+}

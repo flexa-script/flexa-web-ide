@@ -1,0 +1,106 @@
+// testing standard lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+using flx.core.console;
+using flx.std.stopwatch;
+
+var usw: StopWatch = create_stopwatch();
+
+fun start_test(title: string): void {
+    set_console_color(CL_BRIGHT_WHITE, CL_BLACK);
+    println("--- ", title, " ---");
+    set_console_color(CL_BLACK, CL_WHITE);
+    timer_start(usw);
+}
+
+fun end_test(): void {
+    timer_stop(usw);
+    set_console_color(CL_BRIGHT_WHITE, CL_BLACK);
+    print_elapsed_time(usw);
+    set_console_color(CL_BLACK, CL_WHITE);
+    println();
+}
+
+fun assert_equals(test: string, expected: any, value: any, comparator: function = null) {
+	if (comparator != null and comparator(expected, value) or
+		comparator == null and expected == value) {
+		set_console_color(CL_BLACK, CL_LIGHT_GREEN);
+		print("PASS: <" + test + ">");
+	} else {
+		set_console_color(CL_BLACK, CL_RED);
+		print("ERROR: <" + test + "> Expected '", expected, "', got '", value, "'");
+	}
+	set_console_color(CL_BLACK, CL_WHITE);
+	print("\n");
+}
+
+fun assert_between(test: string, min: int, max: int, value: int) {
+	if (value < min) {
+		set_console_color(CL_BLACK, CL_RED);
+		print("ERROR: <" + test + "> Value '", value, "' is lesser than min '", min, "' value");
+	} else if (value > max) {
+		set_console_color(CL_BLACK, CL_RED);
+		print("ERROR: <" + test + "> Value '", value, "' is greather than max '", max, "' value");
+	} else {
+		set_console_color(CL_BLACK, CL_LIGHT_GREEN);
+		print("PASS: <" + test + ">");
+	}
+	set_console_color(CL_BLACK, CL_WHITE);
+	print("\n");
+}
+
+fun assert_between(test: string, min: float, max: float, value: float) {
+	if (value < min) {
+		set_console_color(CL_BLACK, CL_RED);
+		print("ERROR: <" + test + "> Value '", value, "' is lesser than min '", min, "' value");
+	} else if (value > max) {
+		set_console_color(CL_BLACK, CL_RED);
+		print("ERROR: <" + test + "> Value '", value, "' is greather than max '", max, "' value");
+	} else {
+		set_console_color(CL_BLACK, CL_LIGHT_GREEN);
+		print("PASS: <" + test + ">");
+	}
+	set_console_color(CL_BLACK, CL_WHITE);
+	print("\n");
+}
+
+fun assert_true(test: string, value: bool) {
+	if (value) {
+		set_console_color(CL_BLACK, CL_LIGHT_GREEN);
+		print("PASS: <" + test + ">");
+	} else {
+		set_console_color(CL_BLACK, CL_RED);
+		print("ERROR: <" + test + "> Expected true value");
+	}
+	set_console_color(CL_BLACK, CL_WHITE);
+	print("\n");
+}
+
+fun assert_false(test: string, value: bool) {
+	if (not value) {
+		set_console_color(CL_BLACK, CL_LIGHT_GREEN);
+		print("PASS: <" + test + ">");
+	} else {
+		set_console_color(CL_BLACK, CL_RED);
+		print("ERROR: <" + test + "> Expected false value");
+	}
+	set_console_color(CL_BLACK, CL_WHITE);
+	print("\n");
+}
+
+fun assert_success(test: string) {
+	set_console_color(CL_BLACK, CL_LIGHT_GREEN);
+	print("PASS: <" + test + ">");
+	set_console_color(CL_BLACK, CL_WHITE);
+	print("\n");
+}
+
+fun assert_failure(test: string) {
+	set_console_color(CL_BLACK, CL_RED);
+	print("ERROR: <" + test + "> Not expected to be executed");
+	set_console_color(CL_BLACK, CL_WHITE);
+	print("\n");
+}

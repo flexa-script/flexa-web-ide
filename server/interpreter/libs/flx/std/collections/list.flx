@@ -1,0 +1,147 @@
+// list standard lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+using flx.std.collections.collection;
+
+struct List {
+	var collection: Collection;
+}
+
+fun create_list(): List {
+	return List{collection=create_collection()};
+}
+
+fun append(list: List, value: any) {
+	_default_append(list.collection, ref value);
+}
+
+fun append_at(list: List, value: any, index: int) {
+	var collection = list.collection;
+
+	if (index > collection.size) {
+		throw "invalid access position";
+	}
+
+	if (index == collection.size) {
+		_default_append(collection, ref value);
+		return;
+	}
+
+	if (index == 0) {
+		var new_node = Node{value=ref value, next=collection.first};
+		new_node.next.prev = new_node;
+		collection.first = new_node;
+	} else {
+		var prev_node;
+		var curr_node = collection.first;
+
+		for (var i = 0; i < index - 1; i++) {
+			prev_node = curr_node;
+			curr_node = curr_node.next;
+		}
+
+		var new_node = Node{value=ref value, next=curr_node.next};
+		curr_node.next.prev = new_node;
+		curr_node.next = new_node;
+	}
+	collection.size++;
+}
+
+fun remove(list: List) {
+	try {
+		_default_remove(list.collection);
+	} catch (...) {
+		throw "Tryed to remove from empty list";
+	}
+}
+
+fun remove_at(list: List, index: int) {
+	var collection = list.collection;
+
+	if (index >= collection.size) {
+		throw "invalid access position";
+	}
+
+	if (index == 0) {
+		collection.first = collection.first.next;
+	} else {
+		var curr_node = collection.first;
+
+		for (var i = 0; i < index; i++) {
+			curr_node = curr_node.next;
+		}
+
+		var prev_node = curr_node.prev;
+		var next_node = curr_node.next;
+		prev_node.next = next_node;
+		if (next_node != null) {
+			next_node.prev = prev_node;
+		}
+	}
+	collection.size--;
+}
+
+fun get(list: List): any {
+	try {
+		return _default_get(list.collection);
+	} catch (...) {
+		throw "Tryed to get from empty list";
+	}
+}
+
+fun get_at(list: List, index: int): any {
+	var collection = list.collection;
+
+	if (index >= collection.size) {
+		throw "invalid access position";
+	}
+
+	var node = collection.first;
+
+	for (var i = 0; i < index; i++) {
+		node = node.next;
+	}
+
+	return ref node.value;
+}
+
+fun index_of(list: List, value: any, comparator: function = null): int {
+	var collection = list.collection;
+	var current = collection.first;
+	var index = 0;
+
+	while (current != null) {
+		if (comparator != null) {
+			if (comparator(ref current.value, ref value)) {
+				return index;
+			}
+		} else {
+			if (current.value == value) {
+				return index;
+			}
+		}
+		current = current.next;
+		index++;
+	}
+
+	return -1;
+}
+
+fun exists(list: List, value: any, comparator: function = null) {
+	return exists(list.collection, ref value, comparator);
+}
+
+fun len(list: List): int {
+	return list.collection.size;
+}
+
+fun to_array(list: List): any[] {
+	return to_array(list.collection);
+}
+
+fun copy(list: List): List {
+	return List{collection=copy(list.collection)};
+}

@@ -1,0 +1,33 @@
+// types std lib
+// MIT License
+// Copyright (c) 2024 Carlos Eduardo de Borba Machado
+
+namespace flx;
+
+struct Exception {
+	var error: string;
+	var code: int;
+}
+
+struct Pair {
+	var key: string;
+	var value: any;
+}
+
+struct Point {
+	var x: int;
+	var y: int;
+}
+
+struct Size {
+	var width: int;
+	var height: int;
+}
+
+fun is_numeric_type(value: any) {
+	return typeof(value) in {typeof(int), typeof(float)};
+}
+
+fun is_textual_type(value: any) {
+	return typeof(value) in {typeof(string), typeof(char)};
+}
