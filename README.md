@@ -1,7 +1,7 @@
-# Flexa Web
+# Flexa Web IDE
 
-[![Flexa](https://img.shields.io/badge/Made_for-Flexa-purple.svg)](https://github.com/flexa-script)
-[![License](https://img.shields.io/github/license/flexa-script/flexa-web-ide)](LICENSE)
+[![Flexa](https://img.shields.io/badge/Made_for-Flexa-purple.svg)](https://github.com/flexascript)
+[![License](https://img.shields.io/github/license/flexascript/flexa-web-ide)](LICENSE)
 
 ## Sources
 
