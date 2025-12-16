@@ -1,4 +1,10 @@
 services:
+  interpreter:
+    build:
+      context: ./server/interpreter
+      dockerfile: Dockerfile
+    image: flexa-interpreter-image
+
   frontend:
     build:
       context: ./app
@@ -11,6 +17,8 @@ services:
       - backend
 
   backend:
+    depends_on:
+      - interpreter
     build:
       context: ./server
       dockerfile: Dockerfile

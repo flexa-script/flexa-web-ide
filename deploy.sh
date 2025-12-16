@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Building ant starting Flexa Web containers..."
+echo "Building and starting Flexa Web containers..."
 docker compose -f docker-compose.yml up --build -d
 
 echo "Reloading nginx..."

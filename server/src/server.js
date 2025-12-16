@@ -73,8 +73,7 @@ try {
 
             // image and runtime command
             'flexa-interpreter-image',
-            
-            // write code to temp file and run
+            '/app/interpreter/flexa',
             '/code/main.flx'
           ]);
 
