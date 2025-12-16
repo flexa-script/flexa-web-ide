@@ -4,14 +4,14 @@
 
 namespace flx;
 
-fun slice(arr: any[], start: int, end: int = 0): any[] {
+fun slice(arr: any[], start: int, end: int = null): any[] {
 	var size = len(arr);
 
 	if (start > size) {
 		return {};
 	}
 
-	if (end == 0 and size > 0) {
+	if (end == null and size > 0) {
 		end = size - 1;
 	}
 

@@ -6,8 +6,6 @@ namespace flx;
 
 using flx.core.datetime;
 
-include namespace flx;
-
 struct StopWatch {
     var start_time: int;
     var end_time: int;
